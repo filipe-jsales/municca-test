@@ -1,20 +1,19 @@
-let users = [];
+const userService = require('../services/userService');
 
 const createUser = (req, res) => {
     const { name, email } = req.body;
-    const id = users.length + 1;
-    const newUser = { id, name, email };
-    users.push(newUser);
+    const newUser = userService.createUser(name, email);
     res.status(201).json(newUser);
 };
 
 const getUsers = (req, res) => {
+    const users = userService.getUsers();
     res.json(users);
 };
 
 const getUserById = (req, res) => {
     const { id } = req.params;
-    const user = users.find(u => u.id === parseInt(id));
+    const user = userService.getUserById(id);
     if (user) {
         res.json(user);
     } else {
@@ -25,10 +24,9 @@ const getUserById = (req, res) => {
 const updateUser = (req, res) => {
     const { id } = req.params;
     const { name, email } = req.body;
-    const userIndex = users.findIndex(u => u.id === parseInt(id));
-    if (userIndex !== -1) {
-        users[userIndex] = { id: parseInt(id), name, email };
-        res.json(users[userIndex]);
+    const updatedUser = userService.updateUser(id, name, email);
+    if (updatedUser) {
+        res.json(updatedUser);
     } else {
         res.status(404).json({ message: 'Usuário não encontrado' });
     }
@@ -36,13 +34,18 @@ const updateUser = (req, res) => {
 
 const deleteUser = (req, res) => {
     const { id } = req.params;
-    const userIndex = users.findIndex(u => u.id === parseInt(id));
-    if (userIndex !== -1) {
-        users.splice(userIndex, 1);
+    const success = userService.deleteUser(id);
+    if (success) {
         res.status(204).send();
     } else {
         res.status(404).json({ message: 'Usuário não encontrado' });
     }
 };
 
-module.exports = { createUser, getUsers, getUserById, updateUser, deleteUser };
+module.exports = {
+    createUser,
+    getUsers,
+    getUserById,
+    updateUser,
+    deleteUser,
+};
