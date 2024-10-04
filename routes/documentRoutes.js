@@ -1,16 +1,21 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('express');
 const {
-    createDocument,
-    getDocuments,
-    getDocumentsByUserId,
-    updateDocument,
-    deleteDocument
+  createDocument,
+  getDocuments,
+  getDocumentsByUserId,
+  updateDocument,
+  deleteDocument,
 } = require('../controllers/documentController');
+const authenticateToken = require('../middlewares/authMiddleware');
+
+const router = Router();
+
 router.get('/', getDocuments);
-router.post('/', createDocument);
 router.get('/user/:userId', getDocumentsByUserId);
-router.put('/:id', updateDocument);
-router.delete('/:id', deleteDocument);
+
+router.post('/', authenticateToken, createDocument);
+router.delete('/:id', authenticateToken, deleteDocument);
+router.put('/:id',authenticateToken, updateDocument);
 
 module.exports = router;
+
