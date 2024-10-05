@@ -1,4 +1,6 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 let users = [
     {
@@ -12,48 +14,63 @@ let users = [
   ];
   
 
-const createUser = async (name, email, password) => {
-    const id = users.length + 1;
-    const createdAt = new Date();
+  const createUser = async (name, email, password) => {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { id, name, email, password: hashedPassword, createdAt, deletedAt: null };
-    users.push(newUser);
+    
+    const newUser = await prisma.user.create({
+        data: {
+            name,
+            email,
+            password: hashedPassword
+        }
+    });
     
     return newUser;
-  };
-
-
-const getUserById = (id) => {
-    return users.find(u => u.id === parseInt(id));
 };
 
-const updateUser = (id, name, email) => {
-    const userIndex = users.findIndex(u => u.id === parseInt(id));
-    if (userIndex !== -1) {
-        users[userIndex] = { id: parseInt(id), name, email };
-        return users[userIndex];
-    } else {
-        return null;
-    }
+
+const getUserById = async (id) => {
+    const user = await prisma.user.findUnique({
+        where: { id: parseInt(id) }
+    });
+    return user;
 };
 
-const deleteUser = (id) => {
-    const userIndex = users.findIndex(u => u.id === parseInt(id));
-    if (userIndex !== -1) {
-        users[userIndex].deletedAt = new Date();
-        return true;
-    } else {
-        return false;
-    }
+
+const deleteUser = async (id) => {
+    const updatedUser = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { deletedAt: new Date() }
+    });
+    return updatedUser ? true : false;
 };
 
-const getUsers = () => {
-    return users.filter(u => !u.deletedAt);
+const getUsers = async () => {
+    const users = await prisma.user.findMany({
+        where: {
+            deletedAt: null
+        }
+    });
+    return users;
 };
 
-const getUserByEmail = (email) => {
-    return users.find(u => u.email === email);
-}
+
+const getUserByEmail = async (email) => {
+    const user = await prisma.user.findUnique({
+        where: { email }
+    });
+    return user;
+};
+
+const updateUser = async (id, name, email) => {
+    const updatedUser = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { name, email }
+    });
+    return updatedUser;
+};
+
+
 
 
 module.exports = {
