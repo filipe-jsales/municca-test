@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -7,8 +9,8 @@ const App = () => {
   const [users, setUsers] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [newUser, setNewUser] = useState({ name: '', email: '' });
-  const [newDocument, setNewDocument] = useState({ name: '', status: '', userId: '' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
+  const [newDocument, setNewDocument] = useState({ name: '', status: '' });
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [loginResponse, setLoginResponse] = useState(null);
   const [loginError, setLoginError] = useState('');
@@ -18,7 +20,7 @@ const App = () => {
       const response = await axios.get(`${API_URL}/users`);
       setUsers(response.data);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
+      toast.error('Erro ao buscar usuários');
     }
   };
 
@@ -27,7 +29,7 @@ const App = () => {
       const response = await axios.get(`${API_URL}/documents/user/${userId}`);
       setDocuments(response.data);
     } catch (error) {
-      console.error('Erro ao buscar documentos:', error);
+      toast.error('Nenhum documento encontrado para este usuário');
     }
   };
 
@@ -35,9 +37,10 @@ const App = () => {
     try {
       const response = await axios.post(`${API_URL}/users`, newUser);
       setUsers([...users, response.data]);
-      setNewUser({ name: '', email: '' });
+      setNewUser({ name: '', email: '', password: '' });
+      toast.success('Usuário criado com sucesso!');
     } catch (error) {
-      console.error('Erro ao criar usuário:', error);
+      toast.error('Erro ao criar usuário');
     }
   };
 
@@ -46,8 +49,9 @@ const App = () => {
       const updatedUser = { name: 'Novo Nome', email: 'novoemail@example.com' };
       const response = await axios.put(`${API_URL}/users/${userId}`, updatedUser);
       setUsers(users.map((user) => (user.id === userId ? response.data : user)));
+      toast.success('Usuário atualizado com sucesso!');
     } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
+      toast.error('Erro ao atualizar usuário');
     }
   };
 
@@ -55,19 +59,20 @@ const App = () => {
     try {
       await axios.delete(`${API_URL}/users/${userId}`);
       setUsers(users.filter((user) => user.id !== userId));
+      toast.success('Usuário deletado com sucesso!');
     } catch (error) {
-      console.error('Erro ao deletar usuário:', error);
+      toast.error('Erro ao deletar usuário');
     }
   };
 
   const createDocument = async (userId) => {
     const token = localStorage.getItem('token');
-  
+
     if (!token || !userId) {
-      console.error('Erro: Usuário não autenticado.');
+      toast.error('Erro: Usuário não autenticado.');
       return;
     }
-  
+
     try {
       const response = await axios.post(
         `${API_URL}/documents`,
@@ -80,8 +85,9 @@ const App = () => {
       );
       setDocuments([...documents, response.data]);
       setNewDocument({ name: '', status: '' });
+      toast.success('Documento criado com sucesso!');
     } catch (error) {
-      console.error('Erro ao criar documento:', error);
+      toast.error('Erro ao criar documento');
     }
   };
 
@@ -89,21 +95,20 @@ const App = () => {
     const token = localStorage.getItem('token');
 
     if (!token) {
-      console.error('Erro: Usuário não autenticado.');
+      toast.error('Erro: Usuário não autenticado.');
       return;
     }
 
     try {
-      await axios.delete(`${API_URL}/documents/${docId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.delete(`${API_URL}/documents/${docId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setDocuments(documents.filter((doc) => doc.id !== docId));
+      toast.success('Documento deletado com sucesso!');
     } catch (error) {
-      console.error('Erro ao deletar documento:', error);
+      toast.error('Erro ao deletar documento');
     }
   };
 
@@ -111,25 +116,23 @@ const App = () => {
     const token = localStorage.getItem('token');
 
     if (!token) {
-      console.error('Erro: Usuário não autenticado.');
+      toast.error('Erro: Usuário não autenticado.');
       return;
     }
 
     try {
-      const updatedDocument = { name: 'Novo Documento'};
-      const response = await axios.put(`${API_URL}/documents/${docId}`, updatedDocument,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const updatedDocument = { name: 'Novo Documento' };
+      const response = await axios.put(`${API_URL}/documents/${docId}`, updatedDocument, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setDocuments(documents.map((doc) => (doc.id === docId ? response.data : doc)));
+      toast.success('Documento atualizado com sucesso!');
     } catch (error) {
-      console.error('Erro ao atualizar documento:', error);
+      toast.error('Erro ao atualizar documento');
     }
   };
-
 
   const handleUserSelect = (userId) => {
     setSelectedUserId(userId);
@@ -146,11 +149,14 @@ const App = () => {
   
       setLoginResponse(response.data);
       setLoginError(''); 
+      toast.success('Login realizado com sucesso!');
     } catch (error) {
       if (error.response && error.response.data && error.response.data.message) {
         setLoginError(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
         setLoginError('Erro ao fazer login.');
+        toast.error('Erro ao fazer login.');
       }
     }
   };
@@ -161,6 +167,7 @@ const App = () => {
 
   return (
     <div style={{ padding: '20px' }}>
+      <ToastContainer />
       <h1>CRUD de Usuários</h1>
 
       <h2>Login</h2>
@@ -177,14 +184,6 @@ const App = () => {
         onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
       />
       <button onClick={login}>Login</button>
-
-      {loginError && <p style={{ color: 'red' }}>{loginError}</p>}
-      {loginResponse && (
-        <div>
-          <p style={{ color: 'green' }}>Login bem-sucedido!</p>
-          <p>Token: {loginResponse.token}</p>
-        </div>
-      )}
 
       <h2>Criar Novo Usuário</h2>
       <input
@@ -222,31 +221,31 @@ const App = () => {
         </ul>
       )}
 
-    {selectedUserId && (
-      <div>
-        <h2>Documentos do Usuário {selectedUserId}</h2>
-        <input
-          type="text"
-          placeholder="Nome do Documento"
-          value={newDocument.name}
-          onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
-        />
-        <button onClick={() => createDocument(selectedUserId)}>Criar Documento</button>
-        {documents.length === 0 ? (
-          <p>Nenhum documento encontrado para este usuário.</p>
-        ) : (
-          <ul>
-            {documents.map((doc) => (
-              <li key={doc.id}>
-                {doc.name} - {doc.status}
-                <button onClick={() => updateDocument(doc.id)}>Atualizar</button>
-                <button onClick={() => deleteDocument(doc.id)}>Deletar</button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    )}
+      {selectedUserId && (
+        <div>
+          <h2>Documentos do Usuário {selectedUserId}</h2>
+          <input
+            type="text"
+            placeholder="Nome do Documento"
+            value={newDocument.name}
+            onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
+          />
+          <button onClick={() => createDocument(selectedUserId)}>Criar Documento</button>
+          {documents.length === 0 ? (
+            <p>Nenhum documento encontrado para este usuário.</p>
+          ) : (
+            <ul>
+              {documents.map((doc) => (
+                <li key={doc.id}>
+                  {doc.name} - {doc.status}
+                  <button onClick={() => updateDocument(doc.id)}>Atualizar</button>
+                  <button onClick={() => deleteDocument(doc.id)}>Deletar</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 };
