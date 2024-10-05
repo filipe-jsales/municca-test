@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
@@ -12,8 +13,8 @@ const App = () => {
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
   const [newDocument, setNewDocument] = useState({ name: '', status: '' });
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [loginResponse, setLoginResponse] = useState(null);
-  const [loginError, setLoginError] = useState('');
+  const [,setLoginResponse] = useState(null);
+  const [,setLoginError] = useState('');
 
   const fetchUsers = async () => {
     try {
