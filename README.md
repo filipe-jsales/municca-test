@@ -7,6 +7,9 @@ Esse é um projeto desenhado com a finalidade de um teste de entrevista técnica
 
 **Explicação**: No frontend apenas faço um CRUD, onde ao criar um usuário novo é possível logar com o mesmo obtendo um jwt token para poder fazer algumas operações como criar documento para um usuário, deletar e atualizar. Fiz dois modelos de delete, um deletando fisicamente e outro com um soft delete.
 
+**Backend**: O backend é responsável pela criação de usuários e autenticação via JWT. Ele também permite criar, listar, atualizar e deletar documentos relacionados a um usuário.
+**Frontend**: O frontend é um simples CRUD que permite criar, listar, deletar e atualizar documentos de usuários.
+
 
 ## 1. Criar Documento
 
@@ -323,9 +326,6 @@ O Token é passado pelo frontend na requisição uma vez que o usuário tenha cr
 }
 ```
 
-
-
-
 # Instruções para Rodar o Projeto
 
 Clone o repositório:
@@ -362,3 +362,80 @@ $ npm run dev
 ```
 
 O frontend estará rodando em `http://localhost:3000`  (ou outra porta definida nas variáveis de ambiente).
+
+
+## Ambiente de Desenvolvimento com Docker (Opcional)
+
+### 1. Clone o Repositório:
+```bash
+git clone <url_do_repositorio>
+cd <nome_do_projeto>
+```
+
+### 2. Criação do Ambiente Docker
+O ambiente de desenvolvimento foi configurado para rodar com Docker usando `docker-compose`. Ele inclui dois serviços principais: o backend e o frontend.
+
+### 3. Estrutura de Docker:
+#### a) Backend
+O backend é configurado para rodar com `nodemon`, permitindo que qualquer mudança no código fonte seja automaticamente refletida no container. Ele roda em Node.js (imagem `node:18-alpine`) e é exposto na porta 8080.
+
+#### b) Frontend
+O frontend utiliza o Vite para servir a aplicação React em modo de desenvolvimento. Ele roda na porta 5173 e suporta hot-reloading.
+
+### 4. Configuração do `docker-compose.yml`
+O arquivo `docker-compose.yml` orquestra ambos os serviços (frontend e backend) e monta volumes para suportar hot-reloading em ambos os ambientes.
+
+Aqui está um exemplo do arquivo `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        volumes:
+            - ./backend:/usr/src/app
+            - /usr/src/app/node_modules
+        ports:
+            - "8080:8080"
+        environment:
+            - NODE_ENV=development
+        networks:
+            - app-network
+
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        volumes:
+            - ./frontend:/usr/src/app
+            - /usr/src/app/node_modules
+        ports:
+            - "5173:5173"
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
+```
+
+### 5. Como Rodar com Docker
+#### a) Subir os containers:
+```bash
+docker-compose up --build
+```
+Este comando irá construir as imagens Docker para o backend e frontend, instalar as dependências e rodar os containers.
+
+#### b) Acessar as aplicações:
+- **Backend:** Acesse o backend em `http://localhost:8080`.
+- **Frontend:** Acesse o frontend em `http://localhost:5173`.
+
+#### c) Parar os containers:
+```bash
+docker-compose down
+```
+Isso para todos os containers criados.
+
