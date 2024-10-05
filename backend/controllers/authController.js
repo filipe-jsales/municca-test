@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const userService = require('../services/userService'); // Certifique-se de ajustar o caminho corretamente
+const userService = require('../services/userService');
 
 const login = async (req, res) => {
   const { email, password } = req.body;

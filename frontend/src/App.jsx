@@ -61,48 +61,75 @@ const App = () => {
   };
 
   const createDocument = async (userId) => {
-    const token = localStorage.getItem('token'); 
-    // const userId = localStorage.getItem('userId'); 
+    const token = localStorage.getItem('token');
+  
     if (!token || !userId) {
       console.error('Erro: Usuário não autenticado.');
       return;
     }
-
+  
     try {
       const response = await axios.post(
-        `${API_URL}/documents/1`,
+        `${API_URL}/documents`,
         { name: newDocument.name, userId },
         {
           headers: {
-            Authorization: `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
           },
         }
       );
       setDocuments([...documents, response.data]);
-      setNewDocument({ name: '', });
+      setNewDocument({ name: '', status: '' });
     } catch (error) {
       console.error('Erro ao criar documento:', error);
     }
   };
 
+  const deleteDocument = async (docId) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.error('Erro: Usuário não autenticado.');
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/documents/${docId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setDocuments(documents.filter((doc) => doc.id !== docId));
+    } catch (error) {
+      console.error('Erro ao deletar documento:', error);
+    }
+  };
+
   const updateDocument = async (docId) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.error('Erro: Usuário não autenticado.');
+      return;
+    }
+
     try {
       const updatedDocument = { name: 'Novo Documento'};
-      const response = await axios.put(`${API_URL}/documents/${docId}`, updatedDocument);
+      const response = await axios.put(`${API_URL}/documents/${docId}`, updatedDocument,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setDocuments(documents.map((doc) => (doc.id === docId ? response.data : doc)));
     } catch (error) {
       console.error('Erro ao atualizar documento:', error);
     }
   };
 
-  const deleteDocument = async (docId) => {
-    try {
-      await axios.delete(`${API_URL}/documents/${docId}`);
-      setDocuments(documents.filter((doc) => doc.id !== docId));
-    } catch (error) {
-      console.error('Erro ao deletar documento:', error);
-    }
-  };
 
   const handleUserSelect = (userId) => {
     setSelectedUserId(userId);
@@ -112,8 +139,13 @@ const App = () => {
   const login = async () => {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, loginData);
+      
+      const { token, userId } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', userId);
+  
       setLoginResponse(response.data);
-      setLoginError('');
+      setLoginError(''); 
     } catch (error) {
       if (error.response && error.response.data && error.response.data.message) {
         setLoginError(error.response.data.message);
@@ -167,6 +199,12 @@ const App = () => {
         value={newUser.email}
         onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
       />
+      <input
+        type="password"
+        placeholder="Senha"
+        value={newUser.password}
+        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+      />
       <button onClick={createUser}>Criar Usuário</button>
 
       {users.length === 0 ? (
@@ -184,31 +222,31 @@ const App = () => {
         </ul>
       )}
 
-      {selectedUserId && (
-        <div>
-          <h2>Documentos do Usuário {selectedUserId}</h2>
-          <input
-            type="text"
-            placeholder="Nome do Documento"
-            value={newDocument.name}
-            onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
-          />
-          <button onClick={() => createDocument(selectedUserId)}>Criar Documento</button>
-          {documents.length === 0 ? (
-            <p>Nenhum documento encontrado para este usuário.</p>
-          ) : (
-            <ul>
-              {documents.map((doc) => (
-                <li key={doc.id}>
-                  {doc.name}
-                  <button onClick={() => updateDocument(doc.id)}>Atualizar</button>
-                  <button onClick={() => deleteDocument(doc.id)}>Deletar</button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+    {selectedUserId && (
+      <div>
+        <h2>Documentos do Usuário {selectedUserId}</h2>
+        <input
+          type="text"
+          placeholder="Nome do Documento"
+          value={newDocument.name}
+          onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
+        />
+        <button onClick={() => createDocument(selectedUserId)}>Criar Documento</button>
+        {documents.length === 0 ? (
+          <p>Nenhum documento encontrado para este usuário.</p>
+        ) : (
+          <ul>
+            {documents.map((doc) => (
+              <li key={doc.id}>
+                {doc.name} - {doc.status}
+                <button onClick={() => updateDocument(doc.id)}>Atualizar</button>
+                <button onClick={() => deleteDocument(doc.id)}>Deletar</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )}
     </div>
   );
 };
