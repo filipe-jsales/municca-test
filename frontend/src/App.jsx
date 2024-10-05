@@ -1,4 +1,4 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api';
@@ -9,6 +9,9 @@ const App = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [newUser, setNewUser] = useState({ name: '', email: '' });
   const [newDocument, setNewDocument] = useState({ name: '', status: '', userId: '' });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [loginResponse, setLoginResponse] = useState(null);
+  const [loginError, setLoginError] = useState('');
 
   const fetchUsers = async () => {
     try {
@@ -57,11 +60,26 @@ const App = () => {
     }
   };
 
-  const createDocument = async () => {
+  const createDocument = async (userId) => {
+    const token = localStorage.getItem('token'); 
+    // const userId = localStorage.getItem('userId'); 
+    if (!token || !userId) {
+      console.error('Erro: Usuário não autenticado.');
+      return;
+    }
+
     try {
-      const response = await axios.post(`${API_URL}/documents`, newDocument);
+      const response = await axios.post(
+        `${API_URL}/documents/1`,
+        { name: newDocument.name, userId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, 
+          },
+        }
+      );
       setDocuments([...documents, response.data]);
-      setNewDocument({ name: '', status: '', userId: '' });
+      setNewDocument({ name: '', });
     } catch (error) {
       console.error('Erro ao criar documento:', error);
     }
@@ -69,7 +87,7 @@ const App = () => {
 
   const updateDocument = async (docId) => {
     try {
-      const updatedDocument = { name: 'Novo Documento', status: 'inativo' };
+      const updatedDocument = { name: 'Novo Documento'};
       const response = await axios.put(`${API_URL}/documents/${docId}`, updatedDocument);
       setDocuments(documents.map((doc) => (doc.id === docId ? response.data : doc)));
     } catch (error) {
@@ -91,6 +109,20 @@ const App = () => {
     fetchDocumentsByUser(userId);
   };
 
+  const login = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, loginData);
+      setLoginResponse(response.data);
+      setLoginError('');
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        setLoginError(error.response.data.message);
+      } else {
+        setLoginError('Erro ao fazer login.');
+      }
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -98,6 +130,31 @@ const App = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h1>CRUD de Usuários</h1>
+
+      <h2>Login</h2>
+      <input
+        type="email"
+        placeholder="Email"
+        value={loginData.email}
+        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+      />
+      <input
+        type="password"
+        placeholder="Senha"
+        value={loginData.password}
+        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+      />
+      <button onClick={login}>Login</button>
+
+      {loginError && <p style={{ color: 'red' }}>{loginError}</p>}
+      {loginResponse && (
+        <div>
+          <p style={{ color: 'green' }}>Login bem-sucedido!</p>
+          <p>Token: {loginResponse.token}</p>
+        </div>
+      )}
+
+      <h2>Criar Novo Usuário</h2>
       <input
         type="text"
         placeholder="Nome"
@@ -136,20 +193,14 @@ const App = () => {
             value={newDocument.name}
             onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
           />
-          <input
-            type="text"
-            placeholder="Status"
-            value={newDocument.status}
-            onChange={(e) => setNewDocument({ ...newDocument, status: e.target.value })}
-          />
-          <button onClick={createDocument}>Criar Documento</button>
+          <button onClick={() => createDocument(selectedUserId)}>Criar Documento</button>
           {documents.length === 0 ? (
             <p>Nenhum documento encontrado para este usuário.</p>
           ) : (
             <ul>
               {documents.map((doc) => (
                 <li key={doc.id}>
-                  {doc.name} - {doc.status}
+                  {doc.name}
                   <button onClick={() => updateDocument(doc.id)}>Atualizar</button>
                   <button onClick={() => deleteDocument(doc.id)}>Deletar</button>
                 </li>

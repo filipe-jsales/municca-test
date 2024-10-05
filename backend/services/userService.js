@@ -1,11 +1,26 @@
-let users = [];
+const bcrypt = require('bcrypt');
 
-const createUser = (name, email) => {
+let users = [
+    {
+      id: 1,
+      name: 'Admin',
+      email: 'admin4@example.com',
+      password: '$2b$10$Q9gIWpTcdZ3cO8htG9C4q.fnvN3rQJx.bFwsEzMgLqBOnYwZ6QBXm', //senha: 123456 
+      createdAt: new Date(),
+      deletedAt: null,
+    },
+  ];
+  
+
+const createUser = async (name, email, password) => {
     const id = users.length + 1;
-    const newUser = { id, name, email };
+    const createdAt = new Date();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = { id, name, email, password: hashedPassword, createdAt, deletedAt: null };
     users.push(newUser);
+    
     return newUser;
-};
+  };
 
 
 const getUserById = (id) => {
@@ -33,12 +48,18 @@ const deleteUser = (id) => {
 };
 
 const getUsers = () => {
-    return users;
+    return users.filter(u => !u.deletedAt);
 };
+
+const getUserByEmail = (email) => {
+    return users.find(u => u.email === email);
+}
+
 
 module.exports = {
     createUser,
     getUsers,
+    getUserByEmail,
     getUserById,
     updateUser,
     deleteUser,

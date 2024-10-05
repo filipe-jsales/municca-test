@@ -1,8 +1,8 @@
 const documentService = require('../services/documentService');
 
 const createDocument = (req, res) => {
-    const { name, status, userId } = req.body;
-    const newDocument = documentService.createDocument(name, status, userId);
+    const { name, userId } = req.body;
+    const newDocument = documentService.createDocument(name, userId);
     res.status(201).json(newDocument);
 };
 

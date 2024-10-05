@@ -1,8 +1,8 @@
 let documents = [];
 
-const createDocument = (name, status, userId) => {
+const createDocument = (name, userId) => {
     const id = documents.length + 1;
-    const newDocument = { id, name, status, userId: parseInt(userId) };
+    const newDocument = { id, name, userId: parseInt(userId) };
     documents.push(newDocument);
     return newDocument;
 };
