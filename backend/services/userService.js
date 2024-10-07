@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
 
+//caso estivesse usando uma model de banco de dados real importaria a db model e usaria para fazer as transações
+
 let users = [
     {
       id: 1,

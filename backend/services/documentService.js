@@ -1,5 +1,7 @@
 let documents = [];
 
+//caso estivesse usando uma model de banco de dados real importaria a db model e usaria para fazer as transações
+
 const createDocument = (name, userId) => {
     const id = documents.length + 1;
     const newDocument = { id, name, userId: parseInt(userId) };
